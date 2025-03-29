@@ -16,6 +16,7 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
   final nomeController = TextEditingController();
   final descricaoController = TextEditingController();
   final dataVisitaController = TextEditingController();
+  final atividadesController = TextEditingController();
   final _dateFormat = DateFormat('dd/MM/yyyy');
 
   @override
@@ -25,6 +26,8 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
       nomeController.text = widget.lugarAtual!.nome;
       descricaoController.text = widget.lugarAtual!.descricao;
       dataVisitaController.text = widget.lugarAtual!.dataVisitaFormatada;
+      // Se existir um lugar atual, as atividades também devem ser preenchidas
+      atividadesController.text = widget.lugarAtual!.atividadesFormatadas;
     }
   }
 
@@ -70,6 +73,16 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
             ),
             readOnly: true,
           ),
+          TextFormField(
+            controller: atividadesController,
+            decoration: const InputDecoration(labelText: 'Atividades Realizadas'),
+            validator: (String? valor) {
+              if (valor == null || valor.isEmpty) {
+                return 'O campo atividades é obrigatório';
+              }
+              return null;
+            },
+          ),
         ],
       ),
     );
@@ -104,5 +117,9 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
     dataVisita: dataVisitaController.text.isEmpty
         ? null
         : _dateFormat.parse(dataVisitaController.text),
+    atividadesRealizadas: atividadesController.text.split(',').map((e) => e.trim()).toList(), // Passando a lista de atividades
+    companhia: widget.lugarAtual?.companhia,
+    recomendacao: widget.lugarAtual?.recomendacao,
+    localizacao: widget.lugarAtual?.localizacao,
   );
 }

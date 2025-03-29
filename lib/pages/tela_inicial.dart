@@ -10,7 +10,7 @@ class TelaInicial extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/travel_background.jpg'),
+                image: AssetImage('images/novaimagem.png'),
                 fit: BoxFit.cover,
               ),
             ),
