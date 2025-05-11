@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../dao/lugar_dao.dart';
 import 'atividades_page.dart';
 import '../model/lugar.dart';
 import 'package:trabalho_disiciplina/pages/home_page.dart'; // Importar a HomePage
@@ -6,6 +7,8 @@ import 'package:trabalho_disiciplina/pages/home_page.dart'; // Importar a HomePa
 class AdicionarLugarPage extends StatefulWidget {
   @override
   _AdicionarLugarPageState createState() => _AdicionarLugarPageState();
+
+
 }
 
 class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
@@ -14,35 +17,39 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
   final TextEditingController atividadesController = TextEditingController();
   final TextEditingController localidadeController = TextEditingController();
 
+  final LugarDao _dao = LugarDao();
+
+
   DateTime? dataVisitaSelecionada;
   List<Lugar> lugares = [];
 
-  void salvarLugar() {
+  void salvarLugar() async {
     final String nome = nomeController.text;
     final String descricao = descricaoController.text;
     final String atividades = atividadesController.text;
     final String localidade = localidadeController.text;
 
     if (nome.isNotEmpty && descricao.isNotEmpty && localidade.isNotEmpty && dataVisitaSelecionada != null) {
-      setState(() {
-        lugares.add(
-          Lugar(
-            id: lugares.length + 1,
-            nome: nome,
-            descricao: descricao,
-            dataVisita: dataVisitaSelecionada!,
-            atividadesRealizadas: atividades.split(',').map((e) => e.trim()).toList(),
-            companhia: null,
-            recomendacao: null,
-            localizacao: localidade,
-          ),
-        );
-      });
+      final novoLugar = Lugar(
+        nome: nome,
+        descricao: descricao,
+        dataVisita: dataVisitaSelecionada!,
+        atividadesRealizadas: atividades.split(',').map((e) => e.trim()).toList(),
+        localizacao: localidade, id: null,
+      );
 
-      // Exibir diálogo perguntando o que deseja fazer
-      mostrarDialogo();
+      final sucesso = await _dao.salvar(novoLugar);
+
+      if (sucesso) {
+        mostrarDialogo();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar o lugar.')),
+        );
+      }
     }
   }
+
 
   Future<void> mostrarDialogo() async {
     showDialog(
@@ -62,7 +69,7 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
+                Navigator.pop(context, true);
               },
               child: Text("Voltar à página inicial"),
             ),

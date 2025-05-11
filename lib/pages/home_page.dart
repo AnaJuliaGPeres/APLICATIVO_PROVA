@@ -39,16 +39,14 @@ class _HomePageState extends State<HomePage> {
                     text: 'Cadastrar Lugar',
                     icon: Icons.add_location_alt,
                     onPressed: () async {
-                      final novoLugar = await Navigator.push(
+                      final result = await Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => AdicionarLugarPage(),
-                        ),
+                        MaterialPageRoute(builder: (context) => AdicionarLugarPage()),
                       );
-                      if (novoLugar != null) {
-                        setState(() {
-                          _lugares.add(novoLugar); // Adiciona o novo lugar à lista
-                        });
+                      if (result == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Lugar salvo com sucesso!')),
+                        );
                       }
                     },
                   ),
@@ -59,12 +57,8 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => ListaLugaresPage(lugares: _lugares),
-                        ),
-                      ).then((_) {
-                        setState(() {}); // Atualiza a tela ao voltar
-                      });
+                        MaterialPageRoute(builder: (context) => ListaLugaresPage(lugares: [],)),
+                      );
                     },
                   ),
                 ],

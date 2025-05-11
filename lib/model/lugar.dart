@@ -5,17 +5,15 @@ class Lugar {
   static const CAMPO_NOME = 'nome';
   static const CAMPO_DESCRICAO = 'descricao';
   static const CAMPO_ATIVIDADES_REALIZADAS = 'atividades_realizadas';
-  static const CAMPO_COMPANHIA = 'companhia';
-  static const CAMPO_RECOMENDACAO = 'recomendacao';
   static const CAMPO_LOCALIZACAO = 'localizacao';
+  static const CAMPO_DATA_VISITA = 'dataVisita';
+  static const nomeTabela = 'tarefa';
 
-  int id;
+  int ? id;
   String nome;
   String descricao;
   DateTime? dataVisita;
   List<String> atividadesRealizadas;
-  String? companhia;
-  String? recomendacao;
   String? localizacao;
 
   // Remover o parâmetro 'atividades' desnecessário
@@ -25,8 +23,7 @@ class Lugar {
     required this.descricao,
     this.dataVisita,
     required this.atividadesRealizadas,
-    this.companhia,
-    this.recomendacao,
+
     this.localizacao,
   });
 
@@ -41,5 +38,32 @@ class Lugar {
   // Método para converter a lista de atividades em string
   String get atividadesFormatadas {
     return atividadesRealizadas.join(', ');
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      CAMPO_ID: id,
+      CAMPO_NOME: nome,
+      CAMPO_DESCRICAO: descricao,
+      CAMPO_DATA_VISITA: dataVisita?.toIso8601String(),
+      CAMPO_ATIVIDADES_REALIZADAS: atividadesRealizadas.join(','),
+      CAMPO_LOCALIZACAO: localizacao,
+    };
+  }
+
+  factory Lugar.fromMap(Map<String, dynamic> map) {
+    return Lugar(
+      id: map[CAMPO_ID],
+      nome: map[CAMPO_NOME],
+      descricao: map[CAMPO_DESCRICAO],
+      dataVisita: map[CAMPO_DATA_VISITA] != null
+          ? DateTime.parse(map[CAMPO_DATA_VISITA])
+          : null,
+      atividadesRealizadas: (map[CAMPO_ATIVIDADES_REALIZADAS] as String)
+          .split(',')
+          .where((a) => a.isNotEmpty)
+          .toList(),
+      localizacao: map[CAMPO_LOCALIZACAO],
+    );
   }
 }
