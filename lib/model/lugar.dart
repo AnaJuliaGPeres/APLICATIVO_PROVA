@@ -6,6 +6,8 @@ class Lugar {
   static const CAMPO_DESCRICAO = 'descricao';
   static const CAMPO_ATIVIDADES_REALIZADAS = 'atividades_realizadas';
   static const CAMPO_LOCALIZACAO = 'localizacao';
+  static const CAMPO_LATITUDE = 'latitude';
+  static const CAMPO_LONGITUDE = 'longitude';
   static const CAMPO_DATA_VISITA = 'dataVisita';
   static const nomeTabela = 'tarefa';
 
@@ -15,6 +17,8 @@ class Lugar {
   DateTime? dataVisita;
   List<String> atividadesRealizadas;
   String? localizacao;
+  double? latitude;
+  double? longitude;
 
   // Remover o parâmetro 'atividades' desnecessário
   Lugar({
@@ -25,6 +29,8 @@ class Lugar {
     required this.atividadesRealizadas,
 
     this.localizacao,
+    this.latitude,
+    this.longitude,
   });
 
   // Método para formatar a data de visita, caso exista.
@@ -48,6 +54,8 @@ class Lugar {
       CAMPO_DATA_VISITA: dataVisita?.toIso8601String(),
       CAMPO_ATIVIDADES_REALIZADAS: atividadesRealizadas.join(','),
       CAMPO_LOCALIZACAO: localizacao,
+      CAMPO_LATITUDE: latitude,
+      CAMPO_LONGITUDE: longitude,
     };
   }
 
@@ -64,6 +72,8 @@ class Lugar {
           .where((a) => a.isNotEmpty)
           .toList(),
       localizacao: map[CAMPO_LOCALIZACAO],
+      latitude: map[CAMPO_LATITUDE] != null ? map[CAMPO_LATITUDE] as double : null,
+      longitude: map[CAMPO_LONGITUDE] != null ? map[CAMPO_LONGITUDE] as double : null,
     );
   }
 }

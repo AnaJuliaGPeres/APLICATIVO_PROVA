@@ -3,6 +3,8 @@ import '../dao/lugar_dao.dart';
 import 'atividades_page.dart';
 import '../model/lugar.dart';
 import 'package:trabalho_disiciplina/pages/home_page.dart'; // Importar a HomePage
+import 'package:trabalho_disiciplina/services/gps_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AdicionarLugarPage extends StatefulWidget {
   @override
@@ -16,8 +18,11 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController atividadesController = TextEditingController();
   final TextEditingController localidadeController = TextEditingController();
+  final TextEditingController latitudeController = TextEditingController();
+  final TextEditingController longitudeController = TextEditingController();
 
   final LugarDao _dao = LugarDao();
+  final GpsService _gpsService = GpsService();
 
 
   DateTime? dataVisitaSelecionada;
@@ -28,14 +33,19 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
     final String descricao = descricaoController.text;
     final String atividades = atividadesController.text;
     final String localidade = localidadeController.text;
+    final double? latitude = double.tryParse(latitudeController.text);
+    final double? longitude = double.tryParse(longitudeController.text);
 
     if (nome.isNotEmpty && descricao.isNotEmpty && localidade.isNotEmpty && dataVisitaSelecionada != null) {
       final novoLugar = Lugar(
         nome: nome,
         descricao: descricao,
         dataVisita: dataVisitaSelecionada!,
-        atividadesRealizadas: atividades.split(',').map((e) => e.trim()).toList(),
-        localizacao: localidade, id: null,
+        atividadesRealizadas: atividades.split(",").map((e) => e.trim()).toList(),
+        localizacao: localidade,
+        latitude: latitude,
+        longitude: longitude,
+        id: null,
       );
 
       final sucesso = await _dao.salvar(novoLugar);
@@ -44,7 +54,7 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
         mostrarDialogo();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar o lugar.')),
+          SnackBar(content: Text("Erro ao salvar o lugar.")),
         );
       }
     }
@@ -85,6 +95,8 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
       descricaoController.clear();
       atividadesController.clear();
       localidadeController.clear();
+      latitudeController.clear();
+      longitudeController.clear();
       dataVisitaSelecionada = null;
     });
   }
@@ -113,6 +125,17 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
     if (atividadesSelecionadas != null) {
       setState(() {
         atividadesController.text = atividadesSelecionadas;
+      });
+    }
+  }
+
+  Future<void> _obterLocalizacaoAtual() async {
+    Position? position = await _gpsService.getCurrentLocation(context);
+    if (position != null) {
+      setState(() {
+        latitudeController.text = position.latitude.toString();
+        longitudeController.text = position.longitude.toString();
+        localidadeController.text = "Lat: ${position.latitude}, Lon: ${position.longitude}"; // Opcional: preencher localidade
       });
     }
   }
@@ -181,7 +204,22 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
                 children: [
                   campoTexto("Nome do Lugar", "Digite o nome do lugar", nomeController),
                   campoTexto("Descrição", "Digite a descrição", descricaoController, maxLines: 3),
-                  campoTexto("Localidade", "Digite a localização", localidadeController),
+                  campoTexto("Localidade", "Digite a localização ou use o GPS", localidadeController),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: campoTexto("Latitude", "Latitude", latitudeController, readOnly: true),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: campoTexto("Longitude", "Longitude", longitudeController, readOnly: true),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.gps_fixed, color: Colors.blueAccent),
+                        onPressed: _obterLocalizacaoAtual,
+                      )
+                    ],
+                  ),
 
                   campoTexto(
                     "Atividades Realizadas",

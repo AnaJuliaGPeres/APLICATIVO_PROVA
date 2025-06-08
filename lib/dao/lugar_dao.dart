@@ -38,6 +38,8 @@ class LugarDao{
         Lugar.CAMPO_DATA_VISITA,
         Lugar.CAMPO_ATIVIDADES_REALIZADAS,
         Lugar.CAMPO_LOCALIZACAO,
+        Lugar.CAMPO_LATITUDE,
+        Lugar.CAMPO_LONGITUDE,
       ],
     );
     return resultado.map((m) => Lugar.fromMap(m)).toList();

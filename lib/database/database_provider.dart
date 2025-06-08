@@ -39,21 +39,25 @@ class DatabaseProvider {
       ${Lugar.CAMPO_DESCRICAO} TEXT,
       ${Lugar.CAMPO_DATA_VISITA} TEXT,
       ${Lugar.CAMPO_ATIVIDADES_REALIZADAS} TEXT,
-      ${Lugar.CAMPO_LOCALIZACAO} TEXT
+      ${Lugar.CAMPO_LOCALIZACAO} TEXT,
+      ${Lugar.CAMPO_LATITUDE} REAL,
+      ${Lugar.CAMPO_LONGITUDE} REAL
     );
   ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-      ALTER TABLE ${Lugar.nomeTabela}
-      ADD COLUMN ${Lugar.CAMPO_DESCRICAO} TEXT;
-    ''');
-      await db.execute('''
-      ALTER TABLE ${Lugar.nomeTabela}
-      ADD COLUMN ${Lugar.CAMPO_ATIVIDADES_REALIZADAS} TEXT;
-    ''');
+      await db.execute(
+          'ALTER TABLE ${Lugar.nomeTabela} ADD COLUMN ${Lugar.CAMPO_DESCRICAO} TEXT;');
+      await db.execute(
+          'ALTER TABLE ${Lugar.nomeTabela} ADD COLUMN ${Lugar.CAMPO_ATIVIDADES_REALIZADAS} TEXT;');
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+          'ALTER TABLE ${Lugar.nomeTabela} ADD COLUMN ${Lugar.CAMPO_LATITUDE} REAL;');
+      await db.execute(
+          'ALTER TABLE ${Lugar.nomeTabela} ADD COLUMN ${Lugar.CAMPO_LONGITUDE} REAL;');
     }
   }
 

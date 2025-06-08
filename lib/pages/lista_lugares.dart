@@ -124,9 +124,13 @@ class _ListaLugaresPageState extends State<ListaLugaresPage> {
                   Text('Descrição: ${lugares.descricao}'),
                   Text('Local: ${lugares.localizacao}'),
                   Text('Data da visita: ${lugares.dataVisitaFormatada}'),
+
                   if (lugares.atividadesRealizadas != null &&
                       lugares.atividadesRealizadas!.isNotEmpty)
                     Text('Atividades: ${lugares.atividadesRealizadas!.join(", ")}'),
+                  Text("Latitude: ${lugares.latitude ?? 'N/A'}"),
+                  Text("Longitude: ${lugares.longitude ?? 'N/A'}"),
+
                 ],
               ),
               trailing: const Icon(Icons.more_vert),
