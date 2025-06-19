@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../dao/lugar_dao.dart';
+import '../model/cep.dart';
+import '../services/cep_api_service.dart';
 import 'atividades_page.dart';
 import '../model/lugar.dart';
-import 'package:trabalho_disiciplina/pages/home_page.dart'; // Importar a HomePage
 import 'package:trabalho_disiciplina/services/gps_service.dart';
 import 'package:geolocator/geolocator.dart';
 
 class AdicionarLugarPage extends StatefulWidget {
   @override
   _AdicionarLugarPageState createState() => _AdicionarLugarPageState();
-
 
 }
 
@@ -20,10 +21,17 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
   final TextEditingController localidadeController = TextEditingController();
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
+  final TextEditingController cepController = TextEditingController();
 
   final LugarDao _dao = LugarDao();
   final GpsService _gpsService = GpsService();
+  final CepApiService _cepApiService = CepApiService(); // Instância do serviço de CEP
+  bool _buscandoCep = false;
 
+  final _cepMaskFormatter = MaskTextInputFormatter(
+    mask: '#####-###',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
 
   DateTime? dataVisitaSelecionada;
   List<Lugar> lugares = [];
@@ -41,7 +49,7 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
         nome: nome,
         descricao: descricao,
         dataVisita: dataVisitaSelecionada!,
-        atividadesRealizadas: atividades.split(",").map((e) => e.trim()).toList(),
+        atividadesRealizadas: atividades.split(',').map((e) => e.trim()).toList(),
         localizacao: localidade,
         latitude: latitude,
         longitude: longitude,
@@ -57,8 +65,13 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
           SnackBar(content: Text("Erro ao salvar o lugar.")),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Preencha todos os campos obrigatórios: Nome, Descrição, Localidade e Data da Visita.")),
+      );
     }
   }
+
 
 
   Future<void> mostrarDialogo() async {
@@ -140,7 +153,48 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
     }
   }
 
-  @override
+  Future<void> _buscarEnderecoPorCep() async {
+    // Validação inicial do formato do CEP
+    if (cepController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, insira um CEP.')),
+      );
+      return;
+    }
+
+    if (!_cepMaskFormatter.isFill()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Formato de CEP inválido. Use XXXXX-XXX.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _buscandoCep = true;
+    });
+
+    final cepValue = _cepMaskFormatter.getUnmaskedText();
+    final Cep? cepInfo = await _cepApiService.fetchCep(cepValue);
+
+    setState(() {
+      _buscandoCep = false;
+    });
+
+    if (cepInfo != null && cepInfo.enderecoFormatado.trim().isNotEmpty) {
+      setState(() {
+        localidadeController.text = cepInfo.enderecoFormatado;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Endereço encontrado com sucesso!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('CEP inválido ou sem informações de endereço.')),
+      );
+    }}
+
+
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -204,19 +258,60 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
                 children: [
                   campoTexto("Nome do Lugar", "Digite o nome do lugar", nomeController),
                   campoTexto("Descrição", "Digite a descrição", descricaoController, maxLines: 3),
-                  campoTexto("Localidade", "Digite a localização ou use o GPS", localidadeController),
+
+                  // Campo de CEP com botão de busca
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("CEP (Opcional)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                        SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: cepController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [_cepMaskFormatter],
+                                decoration: InputDecoration(
+                                  hintText: "Digite o CEP",
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            _buscandoCep
+                                ? CircularProgressIndicator()
+                                : IconButton(
+                              icon: Icon(Icons.search, color: Colors.blueAccent),
+                              onPressed: _buscarEnderecoPorCep,
+                              tooltip: 'Buscar Endereço por CEP',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  campoTexto("Localidade", "Endereço completo (Ex: Rua, Nº, Bairro, Cidade - UF)", localidadeController, maxLines: 2), // Ajuste o hintText
+
                   Row(
                     children: [
                       Expanded(
-                        child: campoTexto("Latitude", "Latitude", latitudeController, readOnly: true),
+                        child: campoTexto("Latitude", "Latitude (GPS)", latitudeController, readOnly: true),
                       ),
                       SizedBox(width: 10),
                       Expanded(
-                        child: campoTexto("Longitude", "Longitude", longitudeController, readOnly: true),
+                        child: campoTexto("Longitude", "Longitude (GPS)", longitudeController, readOnly: true),
                       ),
                       IconButton(
                         icon: Icon(Icons.gps_fixed, color: Colors.blueAccent),
                         onPressed: _obterLocalizacaoAtual,
+                        tooltip: 'Obter Localização GPS Atual',
                       )
                     ],
                   ),
@@ -322,10 +417,10 @@ class _AdicionarLugarPageState extends State<AdicionarLugarPage> {
               filled: true,
               fillColor: Colors.white,
               contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+              suffixIcon: suffixIcon != null ? Icon(suffixIcon, color: Colors.blueAccent) : null,
             ),
           ),
         ],
       ),
     );
-  }
-}
+  }}
